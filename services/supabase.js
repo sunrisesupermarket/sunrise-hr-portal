@@ -5,7 +5,8 @@ const fs = require('fs');
 class SupabaseService {
     constructor() {
         this.supabaseUrl = process.env.SUPABASE_URL;
-        this.supabaseKey = process.env.SUPABASE_KEY;
+        // Prefer Service Key for server-side operations (bypasses RLS), fallback to Anon Key
+        this.supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
         this.client = null;
     }
 

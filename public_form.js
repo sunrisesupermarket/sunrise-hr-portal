@@ -96,36 +96,21 @@ async function handleAddStaff(e) {
             throw new Error("Please take a photo using the camera.");
         }
 
-        const fileToUpload = capturedPhotoBlob;
-        fileToUpload.name = "webcam_capture.jpg";
-
-        const fileExt = fileToUpload.name ? fileToUpload.name.split('.').pop() : 'jpg';
-        const fileName = `${name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${Date.now()}.${fileExt}`;
-
-        const { error: uploadError } = await supabase.storage
-            .from('staff-photos')
-            .upload(fileName, fileToUpload);
-
-        if (uploadError) throw new Error('Image upload failed: ' + uploadError.message);
-
-        const { data: { publicUrl } } = supabase.storage.from('staff-photos').getPublicUrl(fileName);
+        formData.append('staffPicture', capturedPhotoBlob, 'webcam_capture.jpg');
 
         const stillWorking = document.getElementById('stillWorking').checked;
         const exitDate = stillWorking ? '' : formData.get('exitDate');
+        formData.set('exitDate', exitDate);
 
-        const { error: dbError } = await supabase
-            .from('staff_records')
-            .insert([{
-                full_name: name,
-                resumption_date: formData.get('resumptionDate'),
-                location: formData.get('location'),
-                designation: formData.get('designation'),
-                hiring_officer: formData.get('hiringOfficer'),
-                picture_url: publicUrl,
-                exit_date: exitDate
-            }]);
+        const resp = await fetch('/api/staff', {
+            method: 'POST',
+            body: formData
+        });
 
-        if (dbError) throw new Error('Database save failed: ' + dbError.message);
+        if (!resp.ok) {
+            const errData = await resp.json().catch(() => ({}));
+            throw new Error(errData.error || 'Failed to submit staff record');
+        }
 
         statusEl.textContent = 'Success! Staff record added.';
         statusEl.style.color = 'green';
