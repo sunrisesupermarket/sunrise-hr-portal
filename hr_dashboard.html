@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>HR Dashboard - Sunrise</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --sunrise-red: #D6001C;
+            --sunrise-red-light: #fff0f0;
+            --sunrise-yellow: #FFD700;
+            --text-dark: #1e293b;
+            --text-gray: #64748b;
+            --bg-body: #f8fafc;
+            --white: #ffffff;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            background-color: var(--bg-body);
+            color: var(--text-dark);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* HEADER */
+        .header {
+            background-color: var(--white);
+            border-bottom: 3px solid var(--sunrise-red);
+            padding: 0 2rem;
+            height: 70px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-sm);
+            z-index: 10;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-img {
+            height: 45px;
+        }
+
+        .app-title {
+            font-weight: 700;
+            font-size: 1.35rem;
+            color: var(--sunrise-red);
+            letter-spacing: -0.5px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .btn-logout {
+            color: var(--text-dark);
+            background: transparent;
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-logout:hover {
+            background-color: var(--sunrise-red-light);
+            color: var(--sunrise-red);
+            border-color: var(--sunrise-red);
+        }
+
+        /* CONTAINER */
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 260px;
+            background-color: var(--white);
+            border-right: 1px solid var(--border-color);
+            padding-top: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .nav-item {
+            padding: 0.85rem 2rem;
+            cursor: pointer;
+            color: var(--text-gray);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s;
+            border-right: 3px solid transparent;
+        }
+
+        .nav-item i {
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .nav-item:hover {
+            color: var(--sunrise-red);
+            background-color: var(--sunrise-red-light);
+        }
+
+        .nav-item.active {
+            color: var(--sunrise-red);
+            background-color: var(--sunrise-red-light);
+            border-right-color: var(--sunrise-red);
+            font-weight: 600;
+        }
+
+        /* MAIN CONTENT */
+        .main {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .view-section {
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* CARD STYLE */
+        .card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+        }
+
+        /* TOOLBAR */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .toolbar h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .actions-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* MODERN INPUTS */
+        .search-box-wrapper {
+            position: relative;
+        }
+
+        .search-box-wrapper i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-gray);
+        }
+
+        .search-box {
+            padding: 0.6rem 1rem 0.6rem 2.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            width: 250px;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: var(--sunrise-red);
+            box-shadow: 0 0 0 3px rgba(214, 0, 28, 0.1);
+        }
+
+        .btn-modern {
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-outline {
+            background: white;
+            border: 1px solid var(--border-color);
+            color: var(--text-dark);
+        }
+
+        .btn-outline:hover {
+            background: var(--bg-body);
+            border-color: #cbd5e1;
+        }
+
+        .btn-primary {
+            background: var(--sunrise-red);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #b00017;
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: white;
+            color: #10b981;
+            border: 1px solid #10b981;
+        }
+
+        .btn-success:hover {
+            background: #ecfdf5;
+        }
+
+        /* TABLE MODERN */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        th {
+            text-align: left;
+            padding: 1rem;
+            background-color: var(--bg-body);
+            color: var(--text-gray);
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+            transition: background 0.1s;
+        }
+
+        tr:hover td {
+            background-color: #fafafa;
+        }
+
+        .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 2px solid var(--white);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-active {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .status-active::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: #166534;
+            border-radius: 50%;
+        }
+
+        .status-exited {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-exited::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: #991b1b;
+            border-radius: 50%;
+        }
+
+        /* ACTION ICONS */
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 6px;
+            transition: background 0.2s;
+            color: var(--text-gray);
+            font-size: 1.1rem;
+        }
+
+        .icon-btn:hover {
+            background-color: var(--bg-body);
+            color: var(--text-dark);
+        }
+
+        .icon-btn.edit:hover {
+            color: #3b82f6;
+            background-color: #eff6ff;
+        }
+
+        .icon-btn.delete:hover {
+            color: var(--sunrise-red);
+            background-color: #fef2f2;
+        }
+
+        /* FORM STYLES */
+        .form-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            background-color: #fcfcfc;
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--sunrise-red);
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(214, 0, 28, 0.05);
+        }
+
+        /* PHOTO UPLOAD UI */
+        .photo-upload-area {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.2s;
+            background: #fafafa;
+        }
+
+        .photo-upload-area:hover {
+            border-color: var(--sunrise-red);
+            background: #fffcfc;
+        }
+
+        .photo-actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        #cameraContainer {
+            margin-top: 15px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid var(--sunrise-red);
+            display: inline-block;
+        }
+
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(2px);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <header class="header">
+        <div class="logo-container">
+            <img src="/logo.png" alt="Sunrise Logo" class="logo-img">
+            <span class="app-title">HR Portal</span>
+        </div>
+        <div class="user-info">
+            <span id="userEmail"></span>
+            <button class="btn-logout" id="logoutBtn">
+                <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+            </button>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="nav-item active" onclick="switchView('list')">
+                <i class="fa-solid fa-users"></i>
+                <span>Staff Directory</span>
+            </div>
+            <div class="nav-item" onclick="switchView('add')">
+                <i class="fa-solid fa-user-plus"></i>
+                <span>Register Staff</span>
+            </div>
+        </aside>
+
+        <!-- MAIN -->
+        <main class="main">
+            <!-- VIEW: LIST -->
+            <div id="view-list" class="view-section active">
+                <div class="card">
+                    <div class="toolbar">
+                        <h2><i class="fa-regular fa-folder-open" style="color:var(--sunrise-red)"></i> Staff Records
+                        </h2>
+                        <div class="actions-group">
+                            <div class="search-box-wrapper">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="searchStaff" class="search-box" placeholder="Search staff...">
+                            </div>
+                            <button id="refreshBtn" class="btn-modern btn-outline">
+                                <i class="fa-solid fa-rotate"></i> Refresh
+                            </button>
+                            <button id="downloadBtn" class="btn-modern btn-success">
+                                <i class="fa-solid fa-file-excel"></i> Export Excel
+                            </button>
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Profile</th>
+                                <th>Full Name</th>
+                                <th>Designation</th>
+                                <th>Location</th>
+                                <th>Joined</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="staffTableBody">
+                            <!-- Dynamic Content -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- VIEW: ADD -->
+            <div id="view-add" class="view-section">
+                <div class="card form-container">
+                    <h2
+                        style="border-bottom: 2px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 2rem;">
+                        <i class="fa-solid fa-user-pen" style="color:var(--sunrise-red)"></i> Register New Staff
+                    </h2>
+                    <form id="addStaffForm">
+                        <div class="form-grid">
+                            <!-- Left Col -->
+                            <div>
+                                <div class="form-group">
+                                    <label>Full Name *</label>
+                                    <input type="text" name="fullName" placeholder="e.g. John Doe" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Resumption Date *</label>
+                                    <input type="date" name="resumptionDate" required>
+                                </div>
+                                <!-- MOVED HERE -->
+                                <div class="form-group">
+                                    <div
+                                        style="display: flex; align-items: center; gap: 10px; padding: 10px; background: #fffbe6; border-radius: 8px; border: 1px solid #ffe58f;">
+                                        <input type="checkbox" id="stillWorking" name="stillWorking" checked
+                                            style="width: 18px; height: 18px; accent-color: var(--sunrise-red);">
+                                        <label for="stillWorking" style="margin:0; font-weight: 600;">Currently
+                                            Working</label>
+                                    </div>
+                                    <div id="resignationDateGroup" style="display: none; margin-top: 10px;">
+                                        <label>Exit Date</label>
+                                        <input type="date" name="exitDate">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Location *</label>
+                                    <select name="location" required>
+                                        <option value="">Select Location</option>
+                                        <option value="Ringroad">Ringroad</option>
+                                        <option value="Akala">Akala</option>
+                                        <option value="Bodija">Bodija</option>
+                                        <option value="Akobo">Akobo</option>
+                                        <option value="Jericho">Jericho</option>
+                                        <option value="NTC">NTC</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Right Col -->
+                            <div>
+                                <div class="form-group">
+                                    <label>Designation *</label>
+                                    <input type="text" name="designation" placeholder="e.g. Cashier" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Hiring Officer *</label>
+                                    <input type="text" name="hiringOfficer" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Staff Picture *</label>
+                                    <div class="photo-upload-area">
+                                        <i class="fa-solid fa-camera"
+                                            style="font-size: 2rem; color: #cbd5e1; margin-bottom: 10px;"></i>
+                                        <div class="photo-controls photo-actions">
+                                            <label for="staffPictureInput" class="btn-modern btn-outline"
+                                                style="font-size: 0.8rem;">
+                                                <i class="fa-solid fa-upload"></i> Upload
+                                            </label>
+                                            <input type="file" name="staffPicture" id="staffPictureInput"
+                                                accept="image/*" style="display:none">
+
+                                            <button type="button" class="btn-modern btn-primary" id="startCameraBtn"
+                                                style="font-size: 0.8rem;">
+                                                <i class="fa-solid fa-camera"></i> Use Camera
+                                            </button>
+                                        </div>
+
+                                        <div id="fileName" style="font-size: 0.8rem; color: #666; margin-top: 5px;">
+                                        </div>
+
+                                        <!-- Camera UI -->
+                                        <div id="cameraContainer" style="display:none;">
+                                            <video id="cameraVideo" width="320" height="240" autoplay></video>
+                                            <div style="padding: 10px; background: white;">
+                                                <button type="button" class="btn-modern btn-primary"
+                                                    id="captureBtn">Capture</button>
+                                                <button type="button" class="btn-modern btn-outline"
+                                                    id="stopCameraBtn">Cancel</button>
+                                            </div>
+                                        </div>
+                                        <canvas id="cameraCanvas" style="display:none;"></canvas>
+
+                                        <!-- Preview -->
+                                        <div id="previewContainer"
+                                            style="display:none; margin-top:10px; flex-direction:column; align-items:center;">
+                                            <img id="photoPreview"
+                                                style="max-width: 100%; max-height: 200px; border-radius: 8px;">
+                                            <button type="button" class="btn-modern btn-outline" id="retakeBtn"
+                                                style="margin-top:5px; font-size:0.8rem;">
+                                                Remove / Retake
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end;">
+                            <button type="submit" class="btn-modern btn-primary"
+                                style="padding: 0.8rem 2rem; font-size: 1rem;">
+                                <i class="fa-solid fa-check"></i> Save Staff Record
+                            </button>
+                        </div>
+                        <div id="submitStatus" style="text-align: right; margin-top: 10px; font-weight: 500;"></div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL: EDIT STAFF -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top: 0; margin-bottom: 1.5rem; font-size: 1.5rem;">Update Staff</h3>
+            <form id="editStaffForm">
+                <input type="hidden" id="editStaffId">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="editFullName" required>
+                </div>
+                <div class="form-group">
+                    <label>Designation</label>
+                    <input type="text" id="editDesignation" required>
+                </div>
+                <div class="form-group">
+                    <label>Location</label>
+                    <select id="editLocation" required>
+                        <option value="Ringroad">Ringroad</option>
+                        <option value="Akala">Akala</option>
+                        <option value="Bodija">Bodija</option>
+                        <option value="Akobo">Akobo</option>
+                        <option value="Jericho">Jericho</option>
+                        <option value="NTC">NTC</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Change Picture</label>
+                    <div style="display:flex; gap:15px; align-items:center;">
+                        <img id="currentPhotoView" src=""
+                            style="width:60px; height:60px; object-fit:cover; border-radius:8px; border: 1px solid #ddd;">
+                        <input type="file" id="editPhotoInput" accept="image/*">
+                    </div>
+                </div>
+
+                <div class="modal-actions"
+                    style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" class="btn-modern btn-outline" onclick="closeEditModal()">Cancel</button>
+                    <button type="submit" class="btn-modern btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: EXIT STAFF -->
+    <div id="exitModal" class="modal">
+        <div class="modal-content">
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <i class="fa-solid fa-door-open"
+                    style="font-size: 3rem; color: var(--sunrise-red); background: #fff0f0; padding: 1rem; border-radius: 50%;"></i>
+            </div>
+            <h3 style="text-align: center;">Confirm Exit</h3>
+            <p style="color: #64748b; text-align: center; margin-bottom: 2rem;">
+                Please indicate the date <b id="modalStaffName" style="color: var(--text-dark);"></b> left the company.
+            </p>
+            <input type="date" id="exitDateInput">
+            <div class="modal-actions" style="margin-top: 1.5rem; display: flex; justify-content: center; gap: 10px;">
+                <button class="btn-modern btn-outline" onclick="closeModal()">Cancel</button>
+                <button class="btn-modern btn-primary" onclick="confirmExit()">Confirm Exit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: IMAGE VIEWER -->
+    <div id="imageViewerModal" class="modal" onclick="closeImageModal(event)">
+        <div class="modal-content"
+            style="background: transparent; box-shadow: none; text-align: center; max-width: 800px; width: auto; pointer-events: none;">
+            <div style="pointer-events: auto; display: inline-block;">
+                <img id="fullSizeImage" src=""
+                    style="max-height: 80vh; max-width: 100%; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); background: white;">
+                <div style="margin-top: 15px;">
+                    <a id="downloadImageBtn" href="#" download="staff_image" class="btn-modern btn-primary"
+                        style="text-decoration: none;">
+                        <i class="fa-solid fa-download"></i> Download Original
+                    </a>
+                    <button class="btn-modern btn-outline" style="background: rgba(255,255,255,0.9); border:none;"
+                        onclick="document.getElementById('imageViewerModal').style.display='none'">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="./hr_dashboard.js"></script>
+    <script>
+        // Simple file input listeners for UI
+        document.getElementById('staffPictureInput').addEventListener('change', function (e) {
+            if (e.target.files.length > 0) {
+                document.getElementById('fileName').textContent = 'Selected: ' + e.target.files[0].name;
+                // Hide preview of camera if any
+                document.getElementById('previewContainer').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+
+</html>

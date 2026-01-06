@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Staff Registration - Sunrise</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="description" content="Sunrise Staff Registration Portal">
+    <meta name="theme-color" content="#D6001C">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="apple-touch-icon" href="/favicon.png">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/footer.css">
+    <style>
+        :root {
+            --sunrise-red: #D6001C;
+            --sunrise-yellow: #FFD700;
+            --text-dark: #1e293b;
+            --bg-body: #f8fafc;
+            --white: #ffffff;
+            --border-color: #e2e8f0;
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            background-color: var(--bg-body);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background-color: var(--white);
+            border-bottom: 3px solid var(--sunrise-red);
+            padding: 0 2rem;
+            height: 70px;
+            display: flex;
+            box-shadow: var(--shadow-md);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-img {
+            height: 45px;
+        }
+
+        .app-title {
+            font-weight: 700;
+            font-size: 1.35rem;
+            color: var(--sunrise-red);
+            letter-spacing: -0.5px;
+        }
+
+        .main {
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            background-color: #fcfcfc;
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--sunrise-red);
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(214, 0, 28, 0.05);
+        }
+
+        .btn-modern {
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--sunrise-red);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #b00017;
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: white;
+            border: 1px solid var(--border-color);
+            color: var(--text-dark);
+        }
+
+        .btn-outline:hover {
+            background: var(--bg-body);
+            border-color: #cbd5e1;
+        }
+
+        .photo-upload-area {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.2s;
+            background: #fafafa;
+        }
+
+        .photo-upload-area:hover {
+            border-color: var(--sunrise-red);
+            background: #fffcfc;
+        }
+
+        .photo-actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        #cameraContainer {
+            margin-top: 15px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid var(--sunrise-red);
+            display: inline-block;
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <div class="logo-container">
+            <img src="/logo.png" alt="Sunrise Logo" class="logo-img">
+            <span class="app-title">Staff Registration</span>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="card">
+            <h2
+                style="border-bottom: 2px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 2rem; margin-top: 0;">
+                <i class="fa-solid fa-user-pen" style="color:var(--sunrise-red)"></i> Register New Staff
+            </h2>
+            <form id="addStaffForm">
+                <div class="form-grid">
+                    <!-- Left Col -->
+                    <div>
+                        <div class="form-group">
+                            <label>Full Name *</label>
+                            <input type="text" name="fullName" placeholder="e.g. John Doe" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Resumption Date *</label>
+                            <input type="date" name="resumptionDate" required>
+                        </div>
+                        <div class="form-group">
+                            <div
+                                style="display: flex; align-items: center; gap: 10px; padding: 10px; background: #fffbe6; border-radius: 8px; border: 1px solid #ffe58f;">
+                                <input type="checkbox" id="stillWorking" name="stillWorking" checked
+                                    style="width: 18px; height: 18px; accent-color: var(--sunrise-red);">
+                                <label for="stillWorking" style="margin:0; font-weight: 600;">Currently Working</label>
+                            </div>
+                            <div id="resignationDateGroup" style="display: none; margin-top: 10px;">
+                                <label>Exit Date</label>
+                                <input type="date" name="exitDate">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Location *</label>
+                            <select name="location" required>
+                                <option value="">Select Location</option>
+                                <option value="Ringroad">Ringroad</option>
+                                <option value="Akala">Akala</option>
+                                <option value="Bodija">Bodija</option>
+                                <option value="Akobo">Akobo</option>
+                                <option value="Jericho">Jericho</option>
+                                <option value="NTC">NTC</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- Right Col -->
+                    <div>
+                        <div class="form-group">
+                            <label>Designation *</label>
+                            <input type="text" name="designation" placeholder="e.g. Cashier" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Hiring Officer *</label>
+                            <input type="text" name="hiringOfficer" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Staff Picture *</label>
+                            <div class="photo-upload-area">
+                                <i class="fa-solid fa-camera"
+                                    style="font-size: 2rem; color: #cbd5e1; margin-bottom: 10px;"></i>
+                                <p style="color: #64748b; font-size: 0.9rem; margin: 10px 0;">Take a photo using your
+                                    camera</p>
+                                <div class="photo-controls photo-actions">
+                                    <button type="button" class="btn-modern btn-primary" id="startCameraBtn"
+                                        style="font-size: 0.9rem;">
+                                        <i class="fa-solid fa-camera"></i> Take Photo
+                                    </button>
+                                </div>
+                                <!-- Camera UI -->
+                                <div id="cameraContainer" style="display:none;">
+                                    <video id="cameraVideo" width="320" height="240" autoplay></video>
+                                    <div style="padding: 10px; background: white;">
+                                        <button type="button" class="btn-modern btn-primary"
+                                            id="captureBtn">Capture</button>
+                                        <button type="button" class="btn-modern btn-outline"
+                                            id="stopCameraBtn">Cancel</button>
+                                    </div>
+                                </div>
+                                <canvas id="cameraCanvas" style="display:none;"></canvas>
+                                <!-- Preview -->
+                                <div id="previewContainer"
+                                    style="display:none; margin-top:10px; flex-direction:column; align-items:center;">
+                                    <img id="photoPreview"
+                                        style="max-width: 100%; max-height: 200px; border-radius: 8px;">
+                                    <button type="button" class="btn-modern btn-outline" id="retakeBtn"
+                                        style="margin-top:5px; font-size:0.8rem;">
+                                        Retake Photo
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end;">
+                    <button type="submit" class="btn-modern btn-primary" style="padding: 0.8rem 2rem; font-size: 1rem;">
+                        <i class="fa-solid fa-check"></i> Submit Record
+                    </button>
+                </div>
+                <div id="submitStatus" style="text-align: right; margin-top: 10px; font-weight: 500;"></div>
+            </form>
+        </div>
+    </main>
+
+    <footer class="footer">
+        © 2026 Sunrise HR Portal. Developed by <a href="https://www.edameyo.it.com" target="_blank"
+            rel="noopener noreferrer">édámèyO</a>
+    </footer>
+
+    <script type="module" src="./public_form.js"></script>
+
+</body>
+
+</html>

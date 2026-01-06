@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment variables (CRITICAL - NEVER COMMIT)
+.env
+.env.local
+.env.production
+
+# Uploaded files (temporary storage)
+uploads/
+*.jpg
+*.jpeg
+*.png
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Excel files (generated)
+*.xlsx
+*.xls
+
+# Legacy files (no longer used)
+credentials/
+*.json
+!package.json
+!package-lock.json
