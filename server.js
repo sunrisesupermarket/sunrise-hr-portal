@@ -24,6 +24,26 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname)));
 
+app.use((req, res, next) => {
+    if (req.path.endsWith(',')) {
+        const cleanPath = req.path.slice(0, -1) || '/';
+        return res.redirect(301, cleanPath);
+    }
+    next();
+});
+
+app.get('/logo.png', (req, res) => {
+    const logoPath = path.join(__dirname, 'logo.png');
+    const fallbackPath = path.join(__dirname, 'favicon.png');
+    if (fs.existsSync(logoPath)) {
+        return res.sendFile(logoPath);
+    }
+    if (fs.existsSync(fallbackPath)) {
+        return res.sendFile(fallbackPath);
+    }
+    res.status(404).end();
+});
+
 // Multer Config
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, uploadsDir),
@@ -53,6 +73,22 @@ app.get('/api/config', (req, res) => {
         supabaseUrl: process.env.SUPABASE_URL,
         supabaseKey: process.env.SUPABASE_KEY
     });
+});
+
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok' });
+});
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin', 'index.html'));
+});
+
+app.get('/hr', (req, res) => {
+    res.sendFile(path.join(__dirname, 'hr', 'index.html'));
 });
 
 // 2. Add New Staff (Protected by Client Auth, server just proxies to Storage)
@@ -116,13 +152,14 @@ app.get('/api/admin/export-excel', async (req, res) => {
     }
 });
 
+// Start Server
+app.listen(PORT, () => {
+    console.log(`Server running at http://localhost:${PORT}`);
+    console.log('Mode: Secure HR Portal');
+});
+
 // Error Handler
 app.use((err, req, res, next) => {
     console.error(err);
     res.status(500).json({ error: err.message });
-});
-
-app.listen(PORT, () => {
-    console.log(`\nServer running at http://localhost:${PORT}`);
-    console.log(`Mode: Secure HR Portal`);
 });

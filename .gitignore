@@ -9,9 +9,9 @@ package-lock.json
 
 # Uploaded files (temporary storage)
 uploads/
-*.jpg
-*.jpeg
-*.png
+uploads/**/*.jpg
+uploads/**/*.jpeg
+uploads/**/*.png
 
 # Logs
 logs/
