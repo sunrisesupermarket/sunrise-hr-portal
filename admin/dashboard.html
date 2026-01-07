@@ -203,6 +203,7 @@
             <table>
                 <thead>
                     <tr>
+                        <th>Action</th>
                         <th>Photo</th>
                         <th>Name</th>
                         <th>Designation</th>
@@ -293,6 +294,14 @@
                 tbody.innerHTML = data.map(staff => `
                     <tr>
                         <td>
+                            <button
+                                style="background:#ef4444;color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer"
+                                title="Delete this staff"
+                                onclick="deleteStaff(${staff.id}, '${String(staff.full_name).replace(/'/g, "\\'")}')">
+                                Delete
+                            </button>
+                        </td>
+                        <td>
                              <img src="${staff.picture_url}" class="avatar" onclick="openImageModal('${staff.picture_url}')" style="cursor: pointer;" title="View Full">
                         </td>
                         <td>${staff.full_name}</td>
@@ -313,6 +322,24 @@
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_records' }, () => { loadStaffList(); })
                 .subscribe();
         }
+
+        window.deleteStaff = async (id, name) => {
+            try {
+                const ok = confirm(`Delete staff: ${name}? This action cannot be undone.`);
+                if (!ok) return;
+                const { error } = await supabase
+                    .from('staff_records')
+                    .delete()
+                    .eq('id', id);
+                if (error) {
+                    alert('Delete failed: ' + error.message);
+                    return;
+                }
+                loadStaffList();
+            } catch (err) {
+                alert('Unexpected error: ' + err.message);
+            }
+        };
 
         window.openImageModal = (url) => {
             const modal = document.getElementById('imageViewerModal');
