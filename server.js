@@ -79,6 +79,23 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });
 });
 
+// 4. Admin Delete Staff (Placed before static handlers to prevent conflicts)
+app.delete('/api/admin/staff/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { pictureUrl } = req.body; // Pass pictureUrl if available for cleanup
+        
+        console.log(`Admin deleting staff ${id}...`);
+        
+        await supabaseService.deleteStaff(id, pictureUrl);
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Delete Error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -134,23 +151,6 @@ app.put('/api/staff/:id', async (req, res) => {
     // to utilize the RLS and Auth context of the logged-in user.
     // However, if we need a server proxy:
     res.status(501).json({ message: 'Update via client-side Supabase recommended' });
-});
-
-// 4. Admin Delete Staff
-app.delete('/api/admin/staff/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { pictureUrl } = req.body; // Pass pictureUrl if available for cleanup
-        
-        console.log(`Admin deleting staff ${id}...`);
-        
-        await supabaseService.deleteStaff(id, pictureUrl);
-        
-        res.json({ success: true });
-    } catch (error) {
-        console.error('Delete Error:', error);
-        res.status(500).json({ error: error.message });
-    }
 });
 
 // 5. Admin Export to Excel
