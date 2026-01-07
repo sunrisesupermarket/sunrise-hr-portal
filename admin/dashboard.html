@@ -215,7 +215,7 @@
                 </thead>
                 <tbody id="staffTableBody">
                     <tr>
-                        <td colspan="7">Loading...</td>
+                        <td colspan="8">Loading...</td>
                     </tr>
                 </tbody>
             </table>
@@ -327,6 +327,42 @@
             try {
                 const ok = confirm(`Delete staff: ${name}? This action cannot be undone.`);
                 if (!ok) return;
+
+                const { data: record, error: fetchErr } = await supabase
+                    .from('staff_records')
+                    .select('id,picture_url')
+                    .eq('id', id)
+                    .single();
+                if (fetchErr) {
+                    alert('Failed to fetch staff: ' + fetchErr.message);
+                    return;
+                }
+
+                if (record && record.picture_url) {
+                    try {
+                        const parsed = (() => {
+                            try {
+                                const u = new URL(record.picture_url);
+                                const parts = u.pathname.split('/').filter(Boolean);
+                                const idx = parts.indexOf('public');
+                                if (idx !== -1 && parts[idx + 1]) {
+                                    const bucket = parts[idx + 1];
+                                    const path = parts.slice(idx + 2).join('/');
+                                    if (bucket && path) return { bucket, path };
+                                }
+                                return null;
+                            } catch {
+                                return null;
+                            }
+                        })();
+                        if (parsed) {
+                            await supabase.storage.from(parsed.bucket).remove([parsed.path]);
+                        }
+                    } catch (storageErr) {
+                        alert('Warning: could not remove photo from storage: ' + storageErr.message);
+                    }
+                }
+
                 const { error } = await supabase
                     .from('staff_records')
                     .delete()
