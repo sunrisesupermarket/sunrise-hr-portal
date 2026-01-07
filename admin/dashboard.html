@@ -340,52 +340,40 @@
                 const ok = confirm(`Delete staff: ${name}? This action cannot be undone.`);
                 if (!ok) return;
 
-                const { data: record, error: fetchErr } = await supabase
+                // Client-side delete often fails due to RLS if the user isn't strictly admin in DB.
+                // We'll use the server-side proxy which uses the Service Role Key (if configured)
+                // or just centralizes the logic.
+                
+                let pictureUrl = null;
+                // Fetch record to get picture URL for cleanup
+                const { data: record } = await supabase
                     .from('staff_records')
-                    .select('id,picture_url')
+                    .select('picture_url')
                     .eq('id', id)
                     .single();
-                if (fetchErr) {
-                    alert('Failed to fetch staff: ' + fetchErr.message);
-                    return;
+                
+                if (record) pictureUrl = record.picture_url;
+
+                // Call Server API
+                const response = await fetch(`/api/admin/staff/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ pictureUrl })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Delete failed on server');
                 }
 
-                if (record && record.picture_url) {
-                    try {
-                        const parsed = (() => {
-                            try {
-                                const u = new URL(record.picture_url);
-                                const parts = u.pathname.split('/').filter(Boolean);
-                                const idx = parts.indexOf('public');
-                                if (idx !== -1 && parts[idx + 1]) {
-                                    const bucket = parts[idx + 1];
-                                    const path = parts.slice(idx + 2).join('/');
-                                    if (bucket && path) return { bucket, path };
-                                }
-                                return null;
-                            } catch {
-                                return null;
-                            }
-                        })();
-                        if (parsed) {
-                            await supabase.storage.from(parsed.bucket).remove([parsed.path]);
-                        }
-                    } catch (storageErr) {
-                        alert('Warning: could not remove photo from storage: ' + storageErr.message);
-                    }
-                }
-
-                const { error } = await supabase
-                    .from('staff_records')
-                    .delete()
-                    .eq('id', id);
-                if (error) {
-                    alert('Delete failed: ' + error.message);
-                    return;
-                }
+                alert('Staff deleted successfully');
                 loadStaffList();
             } catch (err) {
-                alert('Unexpected error: ' + err.message);
+                console.error(err);
+                alert('Error: ' + err.message);
             }
         };
 

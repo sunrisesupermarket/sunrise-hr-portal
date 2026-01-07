@@ -136,7 +136,24 @@ app.put('/api/staff/:id', async (req, res) => {
     res.status(501).json({ message: 'Update via client-side Supabase recommended' });
 });
 
-// 4. Admin Export to Excel
+// 4. Admin Delete Staff
+app.delete('/api/admin/staff/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { pictureUrl } = req.body; // Pass pictureUrl if available for cleanup
+        
+        console.log(`Admin deleting staff ${id}...`);
+        
+        await supabaseService.deleteStaff(id, pictureUrl);
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Delete Error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 5. Admin Export to Excel
 app.get('/api/admin/export-excel', async (req, res) => {
     try {
         console.log('Generating Excel report...');

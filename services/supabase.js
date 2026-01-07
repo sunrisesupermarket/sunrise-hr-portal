@@ -110,6 +110,56 @@ class SupabaseService {
             throw new Error(`Failed to fetch staff records: ${error.message}`);
         }
     }
+
+    /**
+     * Delete staff record and associated photo
+     * @param {string} id - Staff ID
+     * @param {string} pictureUrl - Staff picture URL (optional)
+     */
+    async deleteStaff(id, pictureUrl) {
+        if (!this.client) this.initialize();
+
+        try {
+            // 1. Delete Photo if exists
+            if (pictureUrl) {
+                try {
+                    const u = new URL(pictureUrl);
+                    const parts = u.pathname.split('/').filter(Boolean);
+                    const idx = parts.indexOf('public');
+                    if (idx !== -1 && parts[idx + 1]) {
+                        const bucket = parts[idx + 1];
+                        const path = parts.slice(idx + 2).join('/');
+                        
+                        if (bucket && path) {
+                            const { error: storageError } = await this.client.storage
+                                .from(bucket)
+                                .remove([path]);
+                                
+                            if (storageError) {
+                                console.warn('Storage cleanup warning:', storageError.message);
+                            } else {
+                                console.log(`Deleted file: ${bucket}/${path}`);
+                            }
+                        }
+                    }
+                } catch (urlErr) {
+                    console.warn('Invalid picture URL during cleanup:', urlErr.message);
+                }
+            }
+
+            // 2. Delete Record
+            const { error } = await this.client
+                .from('staff_records')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+            return { success: true };
+        } catch (error) {
+            console.error('Supabase delete error:', error);
+            throw new Error(`Failed to delete staff: ${error.message}`);
+        }
+    }
 }
 
 module.exports = new SupabaseService();
