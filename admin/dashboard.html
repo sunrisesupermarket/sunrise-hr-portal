@@ -329,7 +329,7 @@
         function setupDeleteButtons() {
             const buttons = document.querySelectorAll('.btn-delete');
             buttons.forEach(btn => {
-                const id = Number(btn.getAttribute('data-id'));
+                const id = btn.getAttribute('data-id');
                 const name = btn.getAttribute('data-name');
                 btn.addEventListener('click', () => deleteStaff(id, name));
             });
