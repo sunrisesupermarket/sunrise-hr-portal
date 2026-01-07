@@ -295,9 +295,11 @@
                     <tr>
                         <td>
                             <button
+                                class="btn-delete"
+                                data-id="${staff.id}"
+                                data-name="${String(staff.full_name).replace(/"/g, '&quot;')}"
                                 style="background:#ef4444;color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer"
-                                title="Delete this staff"
-                                onclick="deleteStaff(${staff.id}, '${String(staff.full_name).replace(/'/g, "\\'")}')">
+                                title="Delete this staff">
                                 Delete
                             </button>
                         </td>
@@ -312,6 +314,7 @@
                         <td>${staff.hiring_officer}</td>
                     </tr>
                 `).join('');
+                setupDeleteButtons();
             } else {
                 tbody.innerHTML = '<tr><td colspan="7">No records found.</td></tr>';
             }
@@ -321,6 +324,15 @@
             supabase.channel('staff_changes')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_records' }, () => { loadStaffList(); })
                 .subscribe();
+        }
+
+        function setupDeleteButtons() {
+            const buttons = document.querySelectorAll('.btn-delete');
+            buttons.forEach(btn => {
+                const id = Number(btn.getAttribute('data-id'));
+                const name = btn.getAttribute('data-name');
+                btn.addEventListener('click', () => deleteStaff(id, name));
+            });
         }
 
         window.deleteStaff = async (id, name) => {
